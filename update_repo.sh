@@ -244,7 +244,7 @@ for service in "${SERVICES[@]}"; do
         # A separate systemd timer ensures that the restart
         # happens outside the Telegram bot's service cgroup.
 
-	if ! sudo -n "$SYSTEMCTL" start telegram-bot-restart.timer; then
+	if ! sudo -n "$SYSTEMCTL" restart telegram-bot-restart.timer; then
 	    echo "ERROR: Could not schedule restart of $service."
 	    FAILED=1
 	    continue
