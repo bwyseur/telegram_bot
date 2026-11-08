@@ -196,6 +196,60 @@ async def send_service_logs(
     if not output:
         output = "No logs found."
 
+
+
+    # Highlight WARNING, ERROR and CRITICAL log entries.
+    # Use Telegram-supported HTML formatting.
+
+    formatted_lines = []
+
+    for line in output.splitlines():
+        upper_line = line.upper()
+
+        if "CRITICAL" in upper_line:
+            formatted = f"‼ <b>{escape(line)}</b>"
+
+        elif "ERROR" in upper_line:
+            formatted = f"🔴 <b>{escape(line)}</b>"
+
+        elif "WARNING" in upper_line:
+            formatted = f"⚠️ <b>{escape(line)}</b>"
+
+        else:
+            formatted = escape(line)
+
+        formatted_lines.append(formatted)
+
+    # Split into Telegram-safe message chunks.
+    max_length = 3500
+    chunks = []
+    current_chunk = []
+
+    for line in formatted_lines:
+        candidate = "\n".join(current_chunk + [line])
+
+        if len(candidate) > max_length and current_chunk:
+            chunks.append("\n".join(current_chunk))
+            current_chunk = [line]
+        else:
+            current_chunk.append(line)
+
+    if current_chunk:
+        chunks.append("\n".join(current_chunk))
+
+    await message.edit_text(
+        f"Logs for {service_name} ({len(chunks)} message(s))."
+    )
+
+    for index, chunk in enumerate(chunks, start=1):
+        await update.effective_message.reply_text(
+            f"<b>[{index}/{len(chunks)}]</b>\n\n{chunk}",
+            parse_mode="HTML",
+            disable_web_page_preview=True
+        )
+
+
+    """
     # Telegram allows a maximum of 4096 characters per message.
     # Leave room for the heading.
     max_length = 3800
@@ -214,7 +268,7 @@ async def send_service_logs(
             f"[{index}/{len(chunks)}]\n\n{chunk}",
             disable_web_page_preview=True
         )
-
+   """
 
 @authorized
 async def log_boursicotage(
